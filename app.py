@@ -86,8 +86,11 @@ You MUST follow these rules exactly. Any deviation will result in failure.
 
 2. REASONING AND OUTPUT FORMAT (CRITICAL):
    - For complex logic, algorithmic problems, or array filtering, you MUST think step-by-step.
-   - NO MATTER WHAT THE QUESTION IS, you MUST output your final answer on the very last line, prefixed EXACTLY with "FINAL_ANSWER: ".
-   - DO NOT output anything else on the last line.
+   - You MUST format your ENTIRE response exactly like this template:
+<thought>
+[Write your step-by-step reasoning here. Do not skip this.]
+</thought>
+FINAL_ANSWER: [Your final answer here]
 
 3. FORMATTING RULES FOR THE FINAL ANSWER (AFTER THE PREFIX):
    - Type A (Simple Math): Output "The sum is Z." (e.g., "FINAL_ANSWER: The sum is 25.")
