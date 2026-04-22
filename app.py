@@ -23,6 +23,23 @@ if API_KEY:
     except Exception as e:
         print(f"Error listing models: {e}")
 
+import mimetypes
+import urllib.request
+
+def download_image(url):
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            img_data = response.read()
+            mime_type, _ = mimetypes.guess_type(url)
+            if not mime_type:
+                # If it doesn't have an extension, try to guess from Content-Type header
+                mime_type = response.headers.get('Content-Type', 'image/jpeg')
+            return {'mime_type': mime_type, 'data': img_data}
+    except Exception as e:
+        print(f"Error downloading {url}: {e}")
+        return None
+
 @app.route('/v1/answer', methods=['POST'])
 def answer():
     # Safely get data even if Content-Type isn't application/json
@@ -33,6 +50,7 @@ def answer():
     assets = data.get("assets", [])
     
     print(f"Question: {query}")
+    print(f"Assets: {assets}")
     
     import operator
     ops = {
@@ -42,25 +60,31 @@ def answer():
         '/': ('quotient', operator.truediv),
     }
     
-    # 1. Try comprehensive math logic first
-    match = re.search(r'(\d+)\s*([\+\-\*\/])\s*(\d+)', query)
+    # 1. Try comprehensive math logic first (now supports negatives and decimals)
+    match = re.search(r'(-?\d+(?:\.\d+)?)\s*([\+\-\*\/])\s*(-?\d+(?:\.\d+)?)', query)
     if match:
-        num1 = int(match.group(1))
+        num1 = float(match.group(1))
         op_symbol = match.group(2)
-        num2 = int(match.group(3))
+        num2 = float(match.group(3))
         
         name, func = ops[op_symbol]
-        result = func(num1, num2)
         
-        # Format division nicely
-        if isinstance(result, float) and result.is_integer():
-            result = int(result)
-            
-        formatted_answer = f"The {name} is {result}."
-        print(f"Math Parser Answer: {formatted_answer}")
-        return jsonify({"output": formatted_answer})
+        try:
+            result = func(num1, num2)
+            # Format decimals nicely to integers if possible
+            if result.is_integer():
+                result = int(result)
+            else:
+                # Round to 2 decimal places to be safe for most math questions
+                result = round(result, 2)
+                
+            formatted_answer = f"The {name} is {result}."
+            print(f"Math Parser Answer: {formatted_answer}")
+            return jsonify({"output": formatted_answer})
+        except ZeroDivisionError:
+            return jsonify({"output": "Error: Division by zero."})
     
-    # 2. If it's not a simple math expression, use Gemini with strict formatting rules
+    # 2. If it's not a simple math expression, use Gemini with strict formatting rules and Images
     if model:
         try:
             prompt = f"""You are an AI answering questions. 
@@ -69,11 +93,19 @@ If the user asks a simple math question, you MUST format your answer exactly lik
 - Subtraction: 'The difference is <answer>.'
 - Multiplication: 'The product is <answer>.'
 - Division: 'The quotient is <answer>.'
-For example, if the question is 'What is 10 + 15?', answer exactly 'The sum is 25.'
 If it is not a math question, just provide the direct, concise answer without any markdown.
 Question: {query}"""
             
-            response = model.generate_content(prompt)
+            # Prepare contents list
+            contents = [prompt]
+            
+            # Download and append images
+            for url in assets:
+                img_dict = download_image(url)
+                if img_dict:
+                    contents.append(img_dict)
+            
+            response = model.generate_content(contents)
             answer_text = response.text.strip()
             print(f"Gemini Answer: {answer_text}")
             return jsonify({"output": answer_text})
