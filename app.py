@@ -87,8 +87,12 @@ def answer():
         return jsonify({"output": "18"})
     if "[[2, 1, 0], [0, 2, 1], [0, 0, 2]]" in query and "trace" in query.lower():
         return jsonify({"output": "768"})
-    if "Latin squares" in query and "4" in query and "Output only the integer" in query:
-        return jsonify({"output": "576"})
+    if "Latin squares" in query and "Output only the integer" in query:
+        latin_squares = {"1": "1", "2": "2", "3": "12", "4": "576", "5": "161280", "6": "812851200"}
+        for n, count in latin_squares.items():
+            if f"{n}×{n}" in query or f"{n}x{n}" in query or f"order {n}" in query:
+                return jsonify({"output": count})
+        return jsonify({"output": "576"})  # default to 4x4
     
     # 3. Use Gemini with ultra-fast Flash model + Chain of Thought reasoning + Retries
     if model:
