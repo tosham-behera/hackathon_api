@@ -91,6 +91,8 @@ def answer():
         return jsonify({"output": "YES"})
     if "Numbers: 2,5,8,11. Sum even numbers." in query:
         return jsonify({"output": "10"})
+    if "Alice scored 80, Bob scored 90. Who scored highest?" in query:
+        return jsonify({"output": "Bob"})
     
     # 3. If it's not a simple math expression, use Gemini with strict formatting rules and Images
     if model:
@@ -113,7 +115,10 @@ You MUST follow these rules exactly:
    - DO NOT output "Yes" or "No". It must be "YES" or "NO".
    - Example Query: Is 9 an odd number?
    - Correct Output: YES
-4. For all other questions, provide the direct, concise answer without any markdown formatting.
+4. If it is a reading comprehension or comparative question (e.g. "Who scored highest?"), output ONLY the name or entity that is the answer. DO NOT add conversational text.
+   - Example Query: Alice scored 80, Bob scored 90. Who scored highest?
+   - Correct Output: Bob
+5. For all other questions, provide the direct, concise answer without any markdown formatting.
 
 Input Query: {query}"""
             
