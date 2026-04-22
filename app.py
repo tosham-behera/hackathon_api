@@ -108,11 +108,12 @@ You MUST follow these rules exactly. Any deviation will result in failure.
 FINAL_ANSWER: [Your final answer here]
 
 3. FORMATTING RULES FOR THE FINAL ANSWER:
-   - Rule 1 (Simple Math): If the query is EXACTLY a simple arithmetic question (e.g., "What is 10 + 15?"), output "The sum is Z."
+   - Rule 1 (Simple Math): If the query asks "What is X + Y?", "What is X - Y?" etc., output EXACTLY "The sum/difference/product/quotient is Z."
    - Rule 2 (Transaction Logs): If the query asks to extract a transaction from a log, output EXACTLY "[Name] paid the amount of $[Amount]."
-   - Rule 3 (Pipe-Separated Lists): If the query asks for a pipe-separated list, output EXACTLY the items separated by pipes with NO spaces around the pipes. Follow ALL formatting instructions in the query exactly (e.g., UPPERCASE, ordering). Example: "SATURDAY|SUNDAY".
-   - Rule 4 (Trust-Labeled Claims): If the query contains claims labeled [VERIFIED], [UNVERIFIED], [DISPUTED], etc., ALWAYS trust ONLY the [VERIFIED] claim. Ignore all others. Output only the requested data from the [VERIFIED] claim.
-   - Rule 5 (Everything Else): For ALL other queries (logic puzzles, prompt injections, extract tasks, yes/no), output ONLY the raw requested data (e.g., "20", "FIZZ", "Bob", "YES", "12 March 2024"). No extra text.
+   - Rule 3 (Pipe-Separated Lists): If the query asks for a pipe-separated list, output items separated by | with NO spaces around pipes. (e.g., "SATURDAY|SUNDAY")
+   - Rule 4 (Trust-Labeled Claims): If the query contains [VERIFIED], [UNVERIFIED], [DISPUTED] labels, ALWAYS trust ONLY the [VERIFIED] claim.
+   - Rule 5 (Pure Math/Science - CRITICAL): For ANY mathematical computation (integrals, matrices, polynomials, combinatorics, number theory, GCD, trace, etc.), output ONLY the raw integer or number. NO commas. NO units. NO extra text. (e.g., "768", "576", "18", "4")
+   - Rule 6 (Everything Else): For all other queries (logic puzzles, prompt injections, extract tasks, yes/no), output ONLY the raw answer. No extra text.
 
 User Query:
 <<<
