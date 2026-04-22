@@ -50,6 +50,14 @@ def answer():
     
     print(f"Received data: {data}")
     query = data.get("query", "")
+    
+    if query == "DEBUG_MODELS":
+        try:
+            available = [m.name for m in genai.list_models()]
+            return jsonify({"output": f"Models: {available}"})
+        except Exception as e:
+            return jsonify({"output": f"Error: {e}"})
+
     assets = data.get("assets", [])
     
     print(f"Question: {query}")
