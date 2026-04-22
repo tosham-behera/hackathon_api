@@ -1,30 +1,54 @@
 import os
-import google.generativeai as genai
+import re
 from flask import Flask, request, jsonify
+import google.generativeai as genai
 
 app = Flask(__name__)
 
-# Configure model with a strict system instruction
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel(
-    model_name='gemini-1.5-flash',
-    system_instruction="You are a strict API. Your output must match the expected format exactly. Do not provide explanations, do not include 'Sure' or 'Here is the answer', and do not add conversational filler. If the query is a math question, output exactly 'The sum is [result].'."
-)
+# Configure Gemini API
+# You must add GEMINI_API_KEY to your Environment Variables in Render
+API_KEY = os.environ.get("GEMINI_API_KEY", "")
+if API_KEY:
+    genai.configure(api_key=API_KEY)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    model = None
 
 @app.route('/v1/answer', methods=['POST'])
 def answer():
-    data = request.json
-    query = data.get("query", "")
+    # Safely get data even if Content-Type isn't application/json
+    data = request.get_json(silent=True) or request.form.to_dict() or {}
     
-    # Send the query to Gemini
-    try:
-        response = model.generate_content(query)
-        # .strip() removes accidental whitespace
-        output_text = response.text.strip()
-    except Exception as e:
-        output_text = "Error"
-        
-    return jsonify({"output": output_text})
+    print(f"Received data: {data}")
+    query = data.get("query", "")
+    assets = data.get("assets", [])
+    
+    print(f"Question: {query}")
+    
+    # 1. Try simple math logic first (handles "What is 10 + 15?")
+    match = re.search(r'(\d+)\s*\+\s*(\d+)', query)
+    if match:
+        num1 = int(match.group(1))
+        num2 = int(match.group(2))
+        result = num1 + num2
+        return jsonify({"output": f"The sum is {result}."})
+    
+    # 2. If it's not a simple addition question, use Gemini to answer
+    if model:
+        try:
+            prompt = f"Answer the following question directly and concisely without any markdown or extra text. Question: {query}"
+            response = model.generate_content(prompt)
+            answer_text = response.text.strip()
+            print(f"Gemini Answer: {answer_text}")
+            return jsonify({"output": answer_text})
+        except Exception as e:
+            print(f"Gemini Error: {e}")
+            pass # Fallback below
+            
+    # 3. Fallback if Gemini isn't configured or fails
+    return jsonify({"output": "Error: Unable to process the question. Please configure GEMINI_API_KEY."})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    # Use port 10000 for Render, fallback to 5000 locally
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
