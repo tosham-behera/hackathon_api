@@ -16,10 +16,8 @@ if API_KEY:
         available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         print(f"Available models: {available_models}")
         if available_models:
-            # Force flash for extreme speed to avoid 20000ms timeouts, fallback to pro
-            preferred = next((m for m in available_models if 'flash' in m), None)
-            if not preferred:
-                preferred = next((m for m in available_models if 'pro' in m), available_models[0])
+            # Pin to exactly gemini-1.5-flash because 2.5 has a microscopic experimental quota
+            preferred = "gemini-1.5-flash"
             
             model = genai.GenerativeModel(preferred)
             print(f"Selected model: {preferred}")
