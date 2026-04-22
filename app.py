@@ -16,10 +16,10 @@ if API_KEY:
         available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         print(f"Available models: {available_models}")
         if available_models:
-            # Dynamically select 1.5 flash, avoiding the experimental 2.5 which has a tiny quota
-            preferred = next((m for m in available_models if 'flash' in m and '2.5' not in m), None)
+            # Dynamically select 1.5 flash EXACTLY, avoiding 2.0 (limit 0) and 2.5 (limit 20)
+            preferred = next((m for m in available_models if '1.5-flash' in m), None)
             if not preferred:
-                preferred = next((m for m in available_models if 'pro' in m and '2.5' not in m), available_models[0])
+                preferred = next((m for m in available_models if 'pro' in m and '2.' not in m), available_models[0])
             
             model = genai.GenerativeModel(preferred)
             print(f"Selected model: {preferred}")
