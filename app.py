@@ -41,6 +41,10 @@ def download_image(url):
         print(f"Error downloading {url}: {e}")
         return None
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"}), 200
+
 @app.route('/v1/answer', methods=['POST'])
 def answer():
     # Safely get data even if Content-Type isn't application/json
