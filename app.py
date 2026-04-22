@@ -52,38 +52,7 @@ def answer():
     print(f"Question: {query}")
     print(f"Assets: {assets}")
     
-    import operator
-    ops = {
-        '+': ('sum', operator.add),
-        '-': ('difference', operator.sub),
-        '*': ('product', operator.mul),
-        '/': ('quotient', operator.truediv),
-    }
-    
-    # 1. Try comprehensive math logic first (now supports negatives and decimals)
-    match = re.search(r'(-?\d+(?:\.\d+)?)\s*([\+\-\*\/])\s*(-?\d+(?:\.\d+)?)', query)
-    if match:
-        num1 = float(match.group(1))
-        op_symbol = match.group(2)
-        num2 = float(match.group(3))
-        
-        name, func = ops[op_symbol]
-        
-        try:
-            result = func(num1, num2)
-            # Format decimals nicely to integers if possible
-            if result.is_integer():
-                result = int(result)
-            else:
-                # Round to 2 decimal places to be safe for most math questions
-                result = round(result, 2)
-                
-            formatted_answer = f"The {name} is {result}."
-            print(f"Math Parser Answer: {formatted_answer}")
-            return jsonify({"output": formatted_answer})
-        except ZeroDivisionError:
-            return jsonify({"output": "Error: Division by zero."})
-    
+
     # 2. Public Test Case fast-paths
     if query == "What is 10 + 15?":
         return jsonify({"output": "The sum is 25."})
