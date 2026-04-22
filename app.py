@@ -91,16 +91,19 @@ def answer():
     # 3. If it's not a simple math expression, use Gemini with strict formatting rules and Images
     if model:
         try:
-            prompt = f"""You are an AI answering questions for an automated grading system.
-If the user asks a simple math question, format exactly like:
-- Addition: 'The sum is <answer>.'
-- Subtraction: 'The difference is <answer>.'
-- Multiplication: 'The product is <answer>.'
-- Division: 'The quotient is <answer>.'
-If the question asks you to "Extract" something, output ONLY the exact extracted text. NO quotes, NO periods at the end, NO conversational text like "The date is". 
-Example: If the question is 'Extract date from: "Meeting on 12 March 2024".', your answer must be exactly '12 March 2024'.
-Otherwise, just provide the direct, concise answer without any markdown.
-Question: {query}"""
+            prompt = f"""You are a strict data processing API answering questions for an automated grading system.
+You MUST follow these rules exactly:
+1. If it is a math question, format exactly like: 'The sum is X.', 'The difference is X.', 'The product is X.', or 'The quotient is X.'
+2. If it is an "Extract" question (e.g. "Extract ... from ..."), you MUST output ONLY the raw extracted string. 
+   - DO NOT wrap the answer in quotes, backticks, or periods. 
+   - DO NOT include conversational text.
+   - Example Query: Extract date from: "Meeting on 12 March 2024".
+   - Correct Output: 12 March 2024
+   - Example Query: Extract email: send to admin@google.com thanks
+   - Correct Output: admin@google.com
+3. For all other questions, provide the direct, concise answer without any markdown formatting.
+
+Input Query: {query}"""
             
             # Prepare contents list
             contents = [prompt]
@@ -113,6 +116,18 @@ Question: {query}"""
             
             response = model.generate_content(contents)
             answer_text = response.text.strip()
+            
+            # Aggressive cleanup of common AI artifacts that ruin string matching
+            answer_text = answer_text.replace("**", "")
+            if answer_text.startswith("```") and answer_text.endswith("```"):
+                answer_text = answer_text.strip("` \n\r")
+            if answer_text.startswith("`") and answer_text.endswith("`"):
+                answer_text = answer_text.strip("`")
+            if answer_text.startswith('"') and answer_text.endswith('"'):
+                answer_text = answer_text.strip('"')
+            if answer_text.startswith("'") and answer_text.endswith("'"):
+                answer_text = answer_text.strip("'")
+            
             print(f"Gemini Answer: {answer_text}")
             return jsonify({"output": answer_text})
         except Exception as e:
