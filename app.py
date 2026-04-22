@@ -8,12 +8,20 @@ app = Flask(__name__)
 # Configure Gemini API
 # You must add GEMINI_API_KEY to your Environment Variables in Render
 API_KEY = os.environ.get("GEMINI_API_KEY", "")
+model = None
 if API_KEY:
     genai.configure(api_key=API_KEY)
-    # Using 'gemini-pro' as it's the most stable identifier
-    model = genai.GenerativeModel('gemini-pro')
-else:
-    model = None
+    try:
+        # Dynamically find an available model
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        print(f"Available models: {available_models}")
+        if available_models:
+            # Prefer flash or pro if available, otherwise pick the first one
+            preferred = next((m for m in available_models if 'flash' in m or 'pro' in m), available_models[0])
+            model = genai.GenerativeModel(preferred)
+            print(f"Selected model: {preferred}")
+    except Exception as e:
+        print(f"Error listing models: {e}")
 
 @app.route('/v1/answer', methods=['POST'])
 def answer():
