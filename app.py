@@ -16,10 +16,8 @@ if API_KEY:
         available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         print(f"Available models: {available_models}")
         if available_models:
-            # Dynamically select 1.5 flash EXACTLY, avoiding 2.0 (limit 0) and 2.5 (limit 20)
-            preferred = next((m for m in available_models if '1.5-flash' in m), None)
-            if not preferred:
-                preferred = next((m for m in available_models if 'pro' in m and '2.' not in m), available_models[0])
+            # Pin to the stable flash alias because 1.5-flash was deprecated and removed
+            preferred = "gemini-flash-latest"
             
             model = genai.GenerativeModel(preferred)
             print(f"Selected model: {preferred}")
