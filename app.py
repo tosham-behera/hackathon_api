@@ -34,18 +34,45 @@ def answer():
     
     print(f"Question: {query}")
     
-    # 1. Try simple math logic first (handles "What is 10 + 15?")
-    match = re.search(r'(\d+)\s*\+\s*(\d+)', query)
+    import operator
+    ops = {
+        '+': ('sum', operator.add),
+        '-': ('difference', operator.sub),
+        '*': ('product', operator.mul),
+        '/': ('quotient', operator.truediv),
+    }
+    
+    # 1. Try comprehensive math logic first
+    match = re.search(r'(\d+)\s*([\+\-\*\/])\s*(\d+)', query)
     if match:
         num1 = int(match.group(1))
-        num2 = int(match.group(2))
-        result = num1 + num2
-        return jsonify({"output": f"The sum is {result}."})
+        op_symbol = match.group(2)
+        num2 = int(match.group(3))
+        
+        name, func = ops[op_symbol]
+        result = func(num1, num2)
+        
+        # Format division nicely
+        if isinstance(result, float) and result.is_integer():
+            result = int(result)
+            
+        formatted_answer = f"The {name} is {result}."
+        print(f"Math Parser Answer: {formatted_answer}")
+        return jsonify({"output": formatted_answer})
     
-    # 2. If it's not a simple addition question, use Gemini to answer
+    # 2. If it's not a simple math expression, use Gemini with strict formatting rules
     if model:
         try:
-            prompt = f"Answer the following question directly and concisely without any markdown or extra text. Question: {query}"
+            prompt = f"""You are an AI answering questions. 
+If the user asks a simple math question, you MUST format your answer exactly like this:
+- Addition: 'The sum is <answer>.'
+- Subtraction: 'The difference is <answer>.'
+- Multiplication: 'The product is <answer>.'
+- Division: 'The quotient is <answer>.'
+For example, if the question is 'What is 10 + 15?', answer exactly 'The sum is 25.'
+If it is not a math question, just provide the direct, concise answer without any markdown.
+Question: {query}"""
+            
             response = model.generate_content(prompt)
             answer_text = response.text.strip()
             print(f"Gemini Answer: {answer_text}")
