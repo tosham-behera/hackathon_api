@@ -42,11 +42,12 @@ def answer():
             print(f"Gemini Answer: {answer_text}")
             return jsonify({"output": answer_text})
         except Exception as e:
-            print(f"Gemini Error: {e}")
-            pass # Fallback below
+            error_msg = f"Gemini Error: {str(e)}"
+            print(error_msg)
+            return jsonify({"output": error_msg})
             
-    # 3. Fallback if Gemini isn't configured or fails
-    return jsonify({"output": "Error: Unable to process the question. Please configure GEMINI_API_KEY."})
+    # 3. Fallback if API key is completely missing
+    return jsonify({"output": "Error: GEMINI_API_KEY environment variable is not set."})
 
 if __name__ == '__main__':
     # Use port 10000 for Render, fallback to 5000 locally
