@@ -94,13 +94,14 @@ def answer():
             prompt = f"""You are a strict data processing API answering questions for an automated grading system.
 You MUST follow these rules exactly:
 1. If it is a math question, format exactly like: 'The sum is X.', 'The difference is X.', 'The product is X.', or 'The quotient is X.'
-2. If it is an "Extract" question (e.g. "Extract ... from ..."), you MUST output ONLY the raw extracted string. 
+2. If it is an "Extract" question (e.g. "Extract ... from ..."), you MUST output ONLY the raw extracted string EXACTLY as it appears in the source.
+   - DO NOT alter the capitalization, spelling, or punctuation of the extracted text.
    - DO NOT wrap the answer in quotes, backticks, or periods. 
    - DO NOT include conversational text.
    - Example Query: Extract date from: "Meeting on 12 March 2024".
    - Correct Output: 12 March 2024
-   - Example Query: Extract email: send to admin@google.com thanks
-   - Correct Output: admin@google.com
+   - Example Query: Extract email: send to Admin@Google.com thanks
+   - Correct Output: Admin@Google.com
 3. For all other questions, provide the direct, concise answer without any markdown formatting.
 
 Input Query: {query}"""
@@ -114,7 +115,10 @@ Input Query: {query}"""
                 if img_dict:
                     contents.append(img_dict)
             
-            response = model.generate_content(contents)
+            response = model.generate_content(
+                contents,
+                generation_config=genai.types.GenerationConfig(temperature=0.0)
+            )
             answer_text = response.text.strip()
             
             # Aggressive cleanup of common AI artifacts that ruin string matching
